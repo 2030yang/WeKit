@@ -1,4 +1,5 @@
 name: Build ARMv7 Static
+
 on:
   push:
     branches: [ main ]
