@@ -1,41 +1,35 @@
-name: Build ARMv7
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: 修改 workspace 添加回执服务
-        run: |
-          sed -i 's/"xtask"/"xtask",\n    "contrib\/wekit-read-receipts-server"/' Cargo.toml
-
-      - name: 安装 ARM 交叉工具链
-        run: |
-          sudo apt update
-          sudo apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-
-      - name: 安装 Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: armv7-unknown-linux-gnueabihf
-
-      - name: 配置交叉链接器
-        run: |
-          mkdir -p ~/.cargo
-          echo '[target.armv7-unknown-linux-gnueabihf]
-          linker = "arm-linux-gnueabihf-gcc"' > ~/.cargo/config.toml
-
-      - name: 编译
-        run: cargo build --package wekit-read-receipts-server --release --target armv7-unknown-linux-gnueabihf
-
-      - name: 上传产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: wekit-read-receipts-server-armv7
-          path: target/armv7-unknown-linux-gnueabihf/release/wekit-read-receipts-server
+name: Build ARMv7 Static
+ on:
+   push:
+     branches: [ main ]
+   workflow_dispatch:
+ jobs:
+   build:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v4
+       - name: 修改workspace，加入回执服务
+         run: |
+           sed -i 's/"xtask"/"xtask",\n    "contrib\/wekit-read-receipts-server"/' Cargo.toml
+       - name: 安装ARM交叉编译工具链
+         run: |
+           sudo apt update
+           sudo apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+       - name: 安装Rust工具链
+         uses: dtolnay/rust-toolchain@stable
+         with:
+           targets: armv7-unknown-linux-gnueabihf
+       - name: 配置交叉链接器
+         run: |
+           mkdir -p ~/.cargo
+           echo '[target.armv7-unknown-linux-gnueabihf]
+ linker = "arm-linux-gnueabihf-gcc"' > ~/.cargo/config.toml
+       - name: 静态编译（关键：开启crt-static消除GLIBC依赖）
+         run: |
+           export RUSTFLAGS="-C target-feature=+crt-static"
+           cargo build --package wekit-read-receipts-server --release --target armv7-unknown-linux-gnueabihf
+       - name: 上传编译产物
+         uses: actions/upload-artifact@v4
+         with:
+           name: wekit-read-receipts-server-static-armv7
+           path: target/armv7-unknown-linux-gnueabihf/release/wekit-read-receipts-server
