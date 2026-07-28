@@ -1,5 +1,4 @@
 name: Build ARMv7 Static
-
 on:
   push:
     branches: [ main ]
@@ -31,7 +30,7 @@ jobs:
           echo '[target.armv7-unknown-linux-gnueabihf]
 linker = "arm-linux-gnueabihf-gcc"' > ~/.cargo/config.toml
 
-      - name: 静态编译（关键：开启crt-static消除GLIBC依赖）
+      - name: 静态编译（关键：消除GLIBC版本依赖）
         run: |
           export RUSTFLAGS="-C target-feature=+crt-static"
           cargo build --package wekit-read-receipts-server --release --target armv7-unknown-linux-gnueabihf
